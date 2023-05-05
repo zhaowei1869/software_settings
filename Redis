@@ -5,3 +5,67 @@ git commit -m "first commit"
 git branch -M main
 git remote add origin https://github.com/zhaozhao-hub/software_settings.git
 git push -u origin main
+
+今天在启动项目时，用到了Redis缓存数据库，但是却出现了报错信息：ERR Client sent AUTH, but no password is set。
+
+Caused by: io.lettuce.core.RedisCommandExecutionException: ERR Client sent AUTH, but no password is set
+1
+
+
+原因
+产生这个问题的原因异常信息里已经说明，就是Redis服务器没有设置密码，但客户端向其发送了AUTH（authentication，身份验证）请求携带着密码，导致报错。既然是没有设置密码导致的报错，那我们就把Redis服务器给设置上密码就好了。一共有2种方式设置密码：
+
+一、命令行方式
+1、先进入Redis服务器
+
+C:\Program Files (x86)\Redis-x64-3.2.100>redis-cli.exe
+1
+2、查看是否设置了密码
+
+127.0.0.1:6379> auth 123456
+(error) ERR Client sent AUTH, but no password is set
+1
+2
+3、报错，说明没有设置密码，然后再执行配置命令
+
+127.0.0.1:6379> config set requirepass root
+
+OK
+1
+2
+3
+4、返回OK后即代表配置成功，这个时候再执行查看密码命令
+
+redis 127.0.0.1:6379> AUTH 123456
+Ok
+1
+2
+返回OK，就说明已经配置成功了。
+这种配置方式存在一个很严重的问题，就是当我们将Redis服务器关掉之后，这些配置就会失效，下次再启动服务器，需要重新设置！
+
+二、修改配置文件
+还有一种方式就是一劳永逸的方式，就是直接修改配置文件里的参数。在redis.windows.conf（我的是这个配置文件）或者redis.conf（我看网上有说是这个配置文件的）的配置文件中找到requirepass这个参数，设置参数密码，然后保存配置文件，重启Redis。
+
+# requirepass foobared
+requirepass 123456 //123456是设置的密码
+1
+2
+本来这种方式非常简单，但是在实际过程中，却遇见了一些问题，那就是配置不生效，明明配置文件里都已经配置了密码，但是还会报错，后来在Redis启动时发现，Redis报错了：
+
+ Warning: no config file specified, using the default config. 
+ In order to specify a config file use C:\Program Files (x86)\Redis-x64-3.2.100\redis-server.exe
+ /path/to/redis.conf
+1
+2
+3
+
+后来查阅之后才知道，原来Redis启动时需要指定配置文件，否则还会使用默认配置，而我在Windows里启动.exe应用程序时，还是习惯性的双击应用程序启动，导致Redis一直使用的是默认配置。
+这样我们就需要在命令行窗口通过命令行的方式来启动并指定配置文件：
+
+C:\Program Files (x86)\Redis-x64-3.2.100>redis-server.exe redis.windows.conf
+1
+
+这样，我们的Redis服务器的密码就正式配置完成了。
+————————————————
+版权声明：本文为CSDN博主「锦书难托」的原创文章，遵循CC 4.0 BY-SA版权协议，转载请附上原文出处链接及本声明。
+原文链接：https://blog.csdn.net/u014026084/article/details/105767907
