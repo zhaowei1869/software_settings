@@ -9,7 +9,6 @@ git push -u origin main
 今天在启动项目时，用到了Redis缓存数据库，但是却出现了报错信息：ERR Client sent AUTH, but no password is set。
 
 Caused by: io.lettuce.core.RedisCommandExecutionException: ERR Client sent AUTH, but no password is set
-1
 
 
 原因
